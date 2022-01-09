@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8" />
+<title>Sudoku</title>
+<link href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" rel="icon" type="image/x-icon"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<style>
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	user-select: none;
+	overflow: hidden;
+	font-family: sans;
+}
+
+body {
+	background: #000;
+}
+
+p {
+	margin: 1em;
+}
+
+sup {
+	font-size: 50%;
+}
+
+.button {
+	width: calc(var(--unit) * 0.9);
+	height: calc(var(--unit) * 0.9);
+	margin: calc(var(--unit) * 0.05);
+	background: #ddd;
+	border: 2px solid #eee;
+	border-radius: 4px;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	font-size: calc(0.7 * var(--unit));
+	font-weight: bold;
+}
+
+.button.help {
+	font-size: calc(0.12 * var(--unit));
+}
+
+.big-button {
+	width: calc(2 * var(--unit) * 0.95);
+	height: calc(2 * var(--unit) * 0.95);
+	margin: calc(var(--unit) * 0.05);
+	background: #ddd;
+	border: 2px solid #eee;
+	border-radius: 5px;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	font-size: calc(1.2 * var(--unit));
+	font-weight: bold;
+}
+
+.big-button.help {
+	font-size: calc(0.4*var(--unit));
+}
+
+#field {
+	width: calc(9 * var(--unit));
+	height: calc(9 * var(--unit));
+	display: flex;
+	flex-flow: row wrap;
+	transition: background 0.5s ease;
+}
+
+.deactivated
+{
+	color: #aaa !important;
+	cursor: auto !important;
+}
+
+.complete {
+	background: #bb9 !important;
+}
+
+.group {
+	width: calc(100% / 3 - 4px);
+	height: calc(100% / 3 - 4px);
+	margin: 2px;
+	background: #fff;
+	border: 3px solid #000;
+	border-radius: 5px;
+	display: flex;
+	flex-flow: row wrap;
+}
+
+.box {
+	width: calc(100% / 3);
+	height: calc(100% / 3);
+	border: 1px solid #000;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+	transition: background 0.2s ease;
+}
+
+.number {
+	color: #88a;
+	font-size: calc(9*var(--unit) * 0.075);
+}
+
+.box.number {
+	background: #ddd;
+}
+
+.given {
+	font-weight: bold;
+}
+
+.mistake {
+	border: calc(9*var(--unit) * 0.015) solid #f80 !important;
+}
+
+.candidates {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+}
+
+.candidate {
+	width: calc(100% / 3);
+	height: calc(100% / 3);
+	text-align: center;
+	line-height: 100%;
+	font-size: calc(0.25 * var(--unit));
+	font-weight: bold;
+}
+
+.button.active {
+	background: #aea;
+}
+
+.box.active {
+	border: calc(0.1 * var(--unit)) dashed #f00;
+}
+
+.highlight {
+	background: #aea;
+}
+.highlight.number {
+	background: #aea;
+}
+
+#cover {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	background: rgba(0, 0, 0, 0.75);
+	display: flex;
+	flex-flow: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 100;
+}
+
+#menu {
+	width: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.9 + 10px);
+	height: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.6 + 10px);
+	background: #fff;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+	border: 5px solid #ccc;
+	border-radius: 5px;
+}
+
+.menu-button {
+	width: calc(min(100vw, 1.5 * (var(--totalHeight))) * (0.3 - 0.02));
+	height: calc(min(100vw, 1.5 * (var(--totalHeight))) * (0.3 - 0.02));
+	margin: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.01);
+	padding: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.02);
+	color: #fff;
+	background: #779;
+	border: 4px solid #99b;
+	border-radius: 8px;
+	text-align: center;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+	align-items: center;
+	font-size: calc(min(100vw, 1.5 * (var(--totalHeight))) * 1/25);
+	font-weight: bold;
+}
+
+.menu-legal {
+	display: block;
+	position: fixed;
+	right: calc(min(100vw, var(--totalHeight)) * 0.01);
+	top: calc(min(100vw, var(--totalHeight)) * 0.01);
+	width: calc(min(100vw, var(--totalHeight)) * 0.05);
+	height: calc(min(100vw, var(--totalHeight)) * 0.05);
+	border-radius: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.01);
+	border: 2px solid #ccc;
+	background: #fff;
+	font-size: calc(min(100vw, var(--totalHeight)) * 0.036);
+	text-align: center;
+}
+
+#legal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	background: rgba(0, 0, 0, 0.75);
+	display: none;
+	flex-flow: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 110;
+}
+
+#legal-content {
+	width: calc(min(100vw, var(--totalHeight)) * 0.9);
+	height: calc(min(100vw, var(--totalHeight)) * 0.9);
+	border-radius: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.01);
+	border: 5px solid #ccc;
+	background: #fff;
+	display: block;
+	font-size: calc(min(100vw, var(--totalHeight)) * 0.022);
+	overflow-y: auto;
+}
+
+.wait {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	background: rgba(0, 0, 0, 0.75);
+	display: flex;
+	flex-flow: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 200;
+}
+
+@keyframes bg {
+    0% {
+    	background: #fff;
+    }
+    50% {
+    	background: #aaf;
+    }
+    100% {
+    	background: #fff;
+    }
+}
+
+.wait-content {
+	width: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.4);
+	height: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.4);
+	border-radius: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.2);
+	background: #fff;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: 5px solid #ccc;
+	font-size: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.05);
+	text-align: center;
+	animation: 5s ease-in-out infinite bg;
+}
+
+@media (min-aspect-ratio: 7/5) {
+
+:root {
+	--totalHeight: calc(100vh - 0px);
+	--unit: calc(min(100vw / 16, var(--totalHeight) / 9));
+}
+
+#main1 {
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	display: flex;
+	flex-flow: row;
+	background: #99b;
+	color: #000;
+	justify-content: center;
+}
+
+#main2 {
+	width: calc(14*var(--unit));
+	height: calc(9*var(--unit));
+	display: flex;
+	flex-flow: row;
+	color: #000;
+	justify-content: center;
+}
+
+.bar {
+	display: flex;
+	flex-flow: column;
+	width: calc(var(--unit));
+	height: calc(9 * var(--unit));
+}
+
+.big-bar {
+	display: flex;
+	flex-flow: column;
+	width: calc(2 * var(--unit));
+	height: calc(9 * var(--unit));
+}
+
+.sub-bar {
+	display: flex;
+	flex-flow: row wrap;
+	align-content: flex-start;
+	width: calc(2 * var(--unit));
+	height: calc(3 * var(--unit));
+}
+
+#field {
+	margin: 0 calc(0.25 * var(--unit));
+}
+
+}
+
+@media (min-aspect-ratio: 1/1) and (max-aspect-ratio: 7/5) {
+
+:root {
+	--totalHeight: calc(100vh - 0px);
+	--unit: calc(min(100vw / 14, var(--totalHeight) / 11));
+}
+
+#main1 {
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	display: flex;
+	flex-flow: column;
+	background: #99b;
+	color: #000;
+	justify-content: center;
+}
+
+#main2 {
+	width: calc(14*var(--unit));
+	height: calc(9*var(--unit));
+	display: flex;
+	flex-flow: row;
+	color: #000;
+	justify-content: center;
+}
+
+.bar {
+	display: flex;
+	flex-flow: column;
+	width: calc(var(--unit));
+	height: calc(9 * var(--unit));
+}
+
+.big-bar {
+	display: flex;
+	flex-flow: row;
+	justify-content: center;
+	width: calc(14 * var(--unit));
+	height: calc(2 * var(--unit));
+}
+
+.sub-bar {
+	display: flex;
+	flex-flow: row wrap;
+	align-content: flex-start;
+	width: calc(2 * var(--unit));
+	height: calc(3 * var(--unit));
+}
+
+#field {
+	margin: 0 calc(0.25 * var(--unit));
+}
+
+}
+
+@media (min-aspect-ratio: 5/7) and (max-aspect-ratio: 1/1) {
+
+:root {
+	--totalHeight: calc(100vh - 0px);
+	--unit: calc(min(100vw / 11, var(--totalHeight) / 14));
+}
+
+#main1 {
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	display: flex;
+	flex-flow: row;
+	background: #99b;
+	color: #000;
+	justify-content: center;
+}
+
+#main2 {
+	width: calc(9*var(--unit));
+	height: calc(14*var(--unit));
+	display: flex;
+	flex-flow: column;
+	color: #000;
+	justify-content: center;
+}
+
+.bar {
+	display: flex;
+	flex-flow: row;
+	width: calc(9 * var(--unit));
+	height: calc(var(--unit));
+}
+
+.big-bar {
+	display: flex;
+	flex-flow: column;
+	justify-content: center;
+	width: calc(2 * var(--unit));
+	height: calc(14 * var(--unit));
+}
+
+.sub-bar {
+	display: flex;
+	flex-flow: row wrap;
+	align-content: flex-start;
+	width: calc(3 * var(--unit));
+	height: calc(2 * var(--unit));
+}
+
+#field {
+	margin: calc(0.25 * var(--unit)) 0;
+}
+
+}
+
+@media (max-aspect-ratio: 5/7) {
+
+:root {
+	--totalHeight: calc(100vh - 0px);
+	--unit: calc(min(100vw / 9, var(--totalHeight) / 16));
+}
+
+#main1 {
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	display: flex;
+	flex-flow: column;
+	background: #99b;
+	color: #000;
+	justify-content: center;
+}
+
+#main2 {
+	width: calc(9*var(--unit));
+	height: calc(14*var(--unit));
+	display: flex;
+	flex-flow: column;
+	color: #000;
+	justify-content: center;
+}
+
+.bar {
+	display: flex;
+	flex-flow: row;
+	width: calc(9 * var(--unit));
+	height: calc(var(--unit));
+}
+
+.big-bar {
+	display: flex;
+	flex-flow: row;
+	width: calc(9 * var(--unit));
+	height: calc(2 * var(--unit));
+}
+
+.sub-bar {
+	display: flex;
+	flex-flow: row wrap;
+	align-content: flex-start;
+	width: calc(3 * var(--unit));
+	height: calc(2 * var(--unit));
+}
+
+#field {
+	margin: calc(0.25 * var(--unit)) 0;
+}
+
+}
+
+</style>
+<script>
+
+"use strict"
+
+const license = `<p>
+Copyright &copy; 2022 Tobias Glasmachers
+</p><p>
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+</p><p>
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+</p><p>
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+</p><p>
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+</p><p>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</p>`;
+
+function now()
+{ return (new Date()).getTime(); }
+
+function isArray(a)
+{ return Array.isArray(a) || a instanceof Uint32Array; }
+
+function getStorage(name, defaultvalue)
+{
+	let v = localStorage.getItem(name);
+	if (v === null) return defaultvalue;
+	else return JSON.parse(v);
+}
+
+function setStorage(name, value)
+{
+	localStorage.setItem(name, JSON.stringify(value));
+}
+
+// coordinates to/from index
+function c2i(x, y)
+{
+	x |= 0;
+	y |= 0;
+	return (x % 3) + 9 * (x / 3 | 0) + 3 * (y % 3) + 27 * (y / 3 | 0);
+}
+function i2c(index)
+{
+	let x = (index % 3) + 3 * (index % 27 / 9 | 0);
+	let y = (index % 9 / 3 | 0) + 3 * (index / 27 | 0);
+	return [x, y];
+}
+
+// definition of "related" fields, i.e., same row, same column, or same group
+let related = [];
+for (let i=0; i<81; i++)
+{
+	let r = new Uint32Array(20);
+	let [x, y] = i2c(i);
+	let k=0;
+	for (let j=0; j<81; j++)
+	{
+		if (i == j) continue;
+		let [xx, yy] = i2c(j);
+		if (xx == x || yy == y) r[k++] = j;
+		else if ((xx / 3 | 0) == (x / 3 | 0) && (yy / 3 | 0) == (y / 3 | 0)) r[k++] = j;
+	}
+	related.push(r);
+}
+
+// pre-compute number of set bits
+let popcount = new Uint32Array(512);
+for (let i=0; i<512; i++)
+{
+	let n = i - ((i >> 1) & 0x55555555);
+	n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+	popcount[i] = ((n + (n >> 4) & 0xf0f0f0f) * 0x1010101) >> 24;
+}
+
+// turn "candidate encoding" into "plain encoding"
+function clear_candidates(f)
+{
+	f = f.slice();
+	for (let i=0; i<81; i++) if (f[i] >= 512) f[i] = 0;
+	return f;
+}
+
+// turn "plain encoding" into "candidate encoding"
+function set_candidates(f)
+{
+	f = f.slice();
+	for (let i=0; i<81; i++)
+	{
+		if (f[i] == 0 || f[i] >= 512)
+		{
+			let v = 1023;
+			const r = related[i];
+			for (let k=0; k<r.length; k++)
+			{
+				let c = f[r[k]];
+				if (c > 0 && c < 512) v &= ~(1 << (c-1));
+			}
+			f[i] = v;
+		}
+	}
+	return f;
+}
+
+// Solve a Sudoku puzzle, given as an array of length 81. The function
+// returns the completed array if it is unique, and otherwise
+//    "the puzzle is unsolvable"
+// or
+//    "the puzzle does not have a unique solution".
+// The function returns null if the number of iterations exceeds the
+// given maximum.
+function solve(field, maxiter = 100000)
+{
+	field = clear_candidates(field);
+	let iter = 0;
+
+	// recursive backtracking solver
+	function rec(k)
+	{
+		while (k < 81 && field[k] > 0) k++;
+		if (k == 81) return field.slice();
+
+		if (iter >= maxiter) return null;
+		iter++;
+
+		let ret = "the puzzle is unsolvable";
+		const r = related[k];
+		for (let c=1; c<=9; c++)
+		{
+			let legal = true;
+			for (let i=0; i<r.length; i++)
+			{
+				if (field[r[i]] == c)
+				{
+					legal = false;
+					break;
+				}
+			}
+			if (legal)
+			{
+				field[k] = c;
+				let result = rec(k+1);
+				field[k] = 0;
+				if (isArray(result))
+				{
+					if (ret === "the puzzle is unsolvable") ret = result;
+					else return "the puzzle does not have a unique solution";
+				}
+				else if (result === "the puzzle does not have a unique solution") return result;
+			}
+		}
+		return ret;
+	}
+
+	return rec(0);
+}
+
+// Solve -- or partially solve -- the field using a restricted strategy.
+// The function modifies the field in-place, including updated
+// candidates. It returns true if at least one modification was made.
+function solve_with_strategy(field, strategies = 0xffffffff)
+{
+	let modified = false;
+	while (true)
+	{
+		let update = false;
+
+		if (strategies & 1)
+		{
+
+			// check for single candidate in a field
+			for (let i=0; i<81; i++)
+			{
+				if (field[i] < 512) continue;
+				if (popcount[field[i] & 511] == 1)
+				{
+					let c = Math.round(Math.log2(field[i] - 512));
+					field[i] = c+1;
+					const r = related[i];
+					for (let j=0; j<r.length; j++)
+					{
+						if (field[r[j]] >= 512) field[r[j]] &= ~(1 << c);
+					}
+					update = true;
+				}
+			}
+		}
+
+		if (strategies & 2)
+		{
+			// check for only candidate of a number in a row, column, or group
+			for (let y=0; y<9; y++)
+			{
+				// row y
+				let n = new Uint32Array(9);
+				let p = new Uint32Array(9);
+				for (let x=0; x<9; x++)
+				{
+					let i = c2i(x, y);
+					if (field[i] < 512) n[field[i] - 1] = 100;
+					else
+					{
+						for (let u=0; u<9; u++)
+						{
+							if (field[i] & (1 << u))
+							{
+								n[u]++;
+								p[u] = i;
+							}
+						}
+					}
+				}
+				for (let c=0; c<9; c++)
+				{
+					if (n[c] == 1)
+					{
+						let i = p[c];
+						field[i] = c+1;
+						const r = related[i];
+						for (let j=0; j<r.length; j++)
+						{
+							if (field[r[j]] >= 512) field[r[j]] &= ~(1 << c);
+						}
+						update = true;
+					}
+				}
+			}
+
+			for (let x=0; x<9; x++)
+			{
+				// column x
+				let n = new Uint32Array(9);
+				let p = new Uint32Array(9);
+				for (let y=0; y<9; y++)
+				{
+					let i = c2i(x, y);
+					if (field[i] < 512) n[field[i] - 1] = 100;
+					else
+					{
+						for (let u=0; u<9; u++)
+						{
+							if (field[i] & (1 << u))
+							{
+								n[u]++;
+								p[u] = i;
+							}
+						}
+					}
+				}
+				for (let c=0; c<9; c++)
+				{
+					if (n[c] == 1)
+					{
+						let i = p[c];
+						field[i] = c+1;
+						const r = related[i];
+						for (let j=0; j<r.length; j++)
+						{
+							if (field[r[j]] >= 512) field[r[j]] &= ~(1 << c);
+						}
+						update = true;
+					}
+				}
+			}
+
+			for (let g=0; g<9; g++)
+			{
+				// group g
+				let n = new Uint32Array(9);
+				let p = new Uint32Array(9);
+				for (let j=0; j<9; j++)
+				{
+					let i = 9*g+j;
+					if (field[i] < 512) n[field[i] - 1] = 100;
+					else
+					{
+						for (let u=0; u<9; u++)
+						{
+							if (field[i] & (1 << u))
+							{
+								n[u]++;
+								p[u] = i;
+							}
+						}
+					}
+				}
+				for (let c=0; c<9; c++)
+				{
+					if (n[c] == 1)
+					{
+						let i = p[c];
+						field[i] = c+1;
+						const r = related[i];
+						for (let j=0; j<r.length; j++)
+						{
+							if (field[r[j]] >= 512) field[r[j]] &= ~(1 << c);
+						}
+						update = true;
+					}
+				}
+			}
+		}
+
+		if (strategies & 4)
+		{
+			// check intersections of groups and rows or columns
+			for (let y=0; y<9; y++)
+			{
+				let g3 = [-1, -1, -1, -1, -1, -1, -1, -1, -1];   // for each number, the 3-group containing that number
+				for (let g=0; g<3; g++)
+				{
+					let i = c2i(3*g, y);
+					for (let u=0; u<9; u++)
+					{
+						if ((field[i] >= 512 && (field[i] & (1 << u)))
+								|| (field[i+1] >= 512 && (field[i+1] & (1 << u)))
+								|| (field[i+2] >= 512 && (field[i+2] & (1 << u))))
+						{
+							if (g3[u] < 0) g3[u] = g;
+							else g3[u] = 100;
+						}
+					}
+				}
+				for (let u=0; u<9; u++)
+				{
+					if (g3[u] >= 0 && g3[u] < 3)
+					{
+						let x0 = 3 * g3[u];
+						let y0 = y - y % 3;
+						let i0 = c2i(x0, y0);
+						for (let j=0; j<9; j++)
+						{
+							if ((j / 3 | 0) != y % 3)
+							{
+								if (field[i0 + j] >= 512 && field[i0 + j] & (1 << u))
+								{
+									field[i0 + j] &= ~(1 << u);
+									update = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			for (let x=0; x<9; x++)
+			{
+				let g3 = [-1, -1, -1, -1, -1, -1, -1, -1, -1];   // for each number, the 3-group containing that number
+				for (let g=0; g<3; g++)
+				{
+					let i = c2i(x, 3*g);
+					for (let u=0; u<9; u++)
+					{
+						if ((field[i] >= 512 && (field[i] & (1 << u)))
+								|| (field[i+3] >= 512 && (field[i+3] & (1 << u)))
+								|| (field[i+6] >= 512 && (field[i+6] & (1 << u))))
+						{
+							if (g3[u] < 0) g3[u] = g;
+							else g3[u] = 100;
+						}
+					}
+				}
+				for (let u=0; u<9; u++)
+				{
+					if (g3[u] >= 0 && g3[u] < 3)
+					{
+						let x0 = x - x % 3;
+						let y0 = 3 * g3[u];
+						let i0 = c2i(x0, y0);
+						for (let j=0; j<9; j++)
+						{
+							if ((j % 3) != x % 3)
+							{
+								if (field[i0 + j] >= 512 && field[i0 + j] & (1 << u))
+								{
+									field[i0 + j] &= ~(1 << u);
+									update = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (update) modified = true;
+		else break;
+	}
+
+	return modified;
+}
+
+// create an empty puzzle
+function empty()
+{
+	let a = new Uint32Array(81);
+	for (let i=0; i<81; i++) a[i] = 1023;
+	return a;
+}
+
+// create a random puzzle, completely filled in
+function createFull()
+{
+	// recursive backtracking solver
+	let iter = 0;
+	function rec(field, k)
+	{
+		while (k < 81 && field[k] < 512) k++;
+
+		// handle the base case
+		if (k == 81) return field;
+
+		if (iter >= 1000) return null;
+		iter++;
+
+		// create a random permutation of the values
+		let order = new Uint32Array(9);
+		for (let i=0; i<9; i++) order[i] = i+1;
+		for (let i=0; i<9; i++)
+		{
+			let j = (i+1) * Math.random() | 0;
+			let temp = order[i];
+			order[i] = order[j];
+			order[j] = temp;
+		}
+
+		// try all values
+		const r = related[k];
+		let old = field[k];
+		for (let u=0; u<9; u++)
+		{
+			let c = order[u];
+			let legal = true;
+			for (let i=0; i<r.length; i++)
+			{
+				if (field[r[i]] == c)
+				{
+					legal = false;
+					break;
+				}
+			}
+			if (legal)
+			{
+				field[k] = c;
+				let result = rec(field, k+1);
+				if (isArray(result)) return result;
+			}
+		}
+		field[k] = old;
+		return null;
+	}
+
+	// wait for success
+	while (true)
+	{
+		// empty board
+		let field = empty();
+
+		// place the first 17 entries uniformly at random, with evenly distributed values
+		let initial = new Uint32Array(18);
+		for (let i=0; i<18; i++) initial[i] = (i%9);
+		for (let i=0; i<17; i++)
+		{
+			// add a random given
+			let val = initial[i];
+			let pos;
+			while (true)
+			{
+				pos = 81 * Math.random() | 0;
+				if (field[pos] >= 512 && (field[pos] & (1 << val))) break;
+			}
+			field[pos] = val + 1;
+			const r = related[pos];
+			for (let i=0; i<r.length; i++)
+			{
+				if (field[r[i]] >= 512) field[r[i]] &= ~(1 << val);
+			}
+		}
+
+		// call the solver with restricted resources
+		iter = 0;
+		field = rec(field, 0);
+		if (field !== null) return field;
+	}
+}
+
+// Asynchronously create a puzzle. When done, call onDone(puzzle).
+// This generator is quite inefficient, but it seems to produce
+// interesting puzzles.
+function create(difficulty, onDone)
+{
+	let wait = createElement({type: "div", classname: "wait", parent: document.body});
+	let text = createElement({type: "div", classname: "wait-content", parent: wait, text: "generating puzzle..."});
+
+	// timeout loop
+	function generate()
+	{
+		// create any consistent puzzle
+		let complete = createFull();
+
+		// clear as many fields as possible to arrive at a legal solution of sufficient quality
+		let f = complete.slice();
+		let givens = 81;
+		for (let t=0; t<1000; t++)
+		{
+			// remove a random given
+			let pos = null;
+			while (true)
+			{
+				pos = (81 * Math.random()) | 0;
+				if (f[pos] > 0)
+				{
+					f[pos] = 0;
+					givens--;
+					break;
+				}
+			}
+
+			// check with the solver
+			let add = false;
+			let result = solve(f, 10000);
+			if (result === null)
+			{
+				// undo
+				t--;
+				f[pos] = complete[pos];
+				givens++;
+				continue;
+			}
+			if (result == "the puzzle does not have a unique solution")
+			{
+				if (givens < 30)
+				{
+					// found a puzzle with sufficiently few givens
+					f[pos] = complete[pos];
+					givens++;
+					break;
+				}
+				else
+				{
+					// add random givens until the solution is unique
+					while (true)
+					{
+						let pos = (81 * Math.random()) | 0;
+						if (f[pos] == 0)
+						{
+							f[pos] = complete[pos];
+							givens++;
+							if (isArray(solve(f, 10000))) break;
+						}
+					}
+				}
+			}
+		}
+
+		// sanity check
+		if (! isArray(solve(f)))
+		{
+			window.setTimeout(generate, 1);
+			return;
+		}
+
+		// test difficulty
+		f = set_candidates(f);
+		let s = f.slice();
+
+		if (difficulty == "easy")
+		{
+			solve_with_strategy(s, 1);
+			let open = 0;
+			for (let i=0; i<81; i++) if (s[i] >= 512) open++;
+			if (open == 0)
+			{
+				wait.remove();
+				onDone(f);
+				return;
+			}
+		}
+		else if (difficulty == "medium")
+		{
+			solve_with_strategy(s, 1);
+			let open = 0;
+			for (let i=0; i<81; i++) if (s[i] >= 512) open++;
+			if (open > 0)
+			{
+				solve_with_strategy(s, 7);
+				let open = 0;
+				for (let i=0; i<81; i++) if (s[i] >= 512) open++;
+				if (open == 0)
+				{
+					wait.remove();
+					onDone(f);
+					return;
+				}
+			}
+		}
+		else if (difficulty == "hard")
+		{
+			solve_with_strategy(s, 7);
+			let open = 0;
+			for (let i=0; i<81; i++) if (s[i] >= 512) open++;
+			if (open > 0 && open <= 20)
+			{
+				wait.remove();
+				onDone(f);
+				return;
+			}
+		}
+		else if (difficulty == "very hard")
+		{
+			solve_with_strategy(s, 7);
+			let open = 0;
+			for (let i=0; i<81; i++) if (s[i] >= 512) open++;
+			if (open > 20)
+			{
+				wait.remove();
+				onDone(f);
+				return;
+			}
+		}
+		else throw "[create] invalid difficulty level";
+
+		window.setTimeout(generate, 1);
+	}
+
+	// start the timeout loop
+	window.setTimeout(generate, 1);
+}
+
+// create DOM element
+function createElement(description)
+{
+	// create the DOM element
+	let element = document.createElement(description.type);
+
+	// set classes
+	if (description.hasOwnProperty("classname"))
+	{
+		let classes = description.classname.split(' ');
+		for (let c of classes) element.classList.add(c);
+	}
+
+	// set ID
+	if (description.hasOwnProperty("id")) element.id = description.id;
+
+	// add properties to the element
+	if (description.hasOwnProperty("properties")) {
+		for (let key in description.properties) {
+			if (!description.properties.hasOwnProperty(key)) continue;
+			element[key] = description.properties[key];
+		}
+	}
+
+	// apply styles
+	if (description.hasOwnProperty("style")) {
+		for (let key in description.style) {
+			if (!description.style.hasOwnProperty(key)) continue;
+			element.style[key] = description.style[key];
+		}
+	}
+
+	// add inner text
+	if (description.hasOwnProperty("text"))
+		element.appendChild(document.createTextNode(description.text));
+
+	// add inner html
+	if (description.hasOwnProperty("html"))
+		element.innerHTML += description.html;
+
+	// add a click handler
+	if (description.hasOwnProperty("click")) {
+		element.addEventListener("click", description.click);
+		element.style.cursor = "pointer";
+	}
+
+	// add arbitrary event handlers
+	if (description.hasOwnProperty("events")) {
+		for (let key in description.events) {
+			if (!description.events.hasOwnProperty(key)) continue;
+			element.addEventListener(key, description.events[key]);
+		}
+	}
+
+	// add to a parent
+	if (description.parent) description.parent.appendChild(element);
+
+	// add help text
+	if (description.hasOwnProperty("help")) element.dataset.help = description.help;
+
+	return element;
+}
+
+
+// current state
+let initialized = false;
+let field = [];
+let active = null;
+let highlight_value = null;
+let highlight_candidate = null;
+let history = [];
+let history_position = 0;
+let enter_mode = false;
+let show_mistakes = getStorage("show_mistakes", true);
+
+
+function getState()
+{
+	let state = new Uint32Array(81);
+	for (let i=0; i<81; i++) state[i] = field[i].value;
+	return state;
+}
+
+function setState(state)
+{
+	for (let i=0; i<81; i++) field[i].value = state[i];
+}
+
+// initialize the field with array f
+function init(f)
+{
+	initialized = true;
+	delClass("#button-back-to-game", "deactivated");
+
+	let complete = f;
+	if (! enter_mode)
+	{
+		complete = solve(f);
+		if (complete === null)
+		{
+			alert("Solving the puzzle failed.");
+			return;
+		}
+		else if (typeof complete == "string")
+		{
+			alert("The field is not a valid starting position: " + complete);
+			return;
+		}
+	}
+
+	for (let i=0; i<9; i++)
+	{
+		for (let j=0; j<9; j++)
+		{
+			field[9*i+j].correct = complete[9*i+j];
+			field[9*i+j].given = f[9*i+j] < 512;
+			field[9*i+j].value = f[9*i+j];
+		}
+	}
+
+	// create initial undo/redo history state
+	history = [];
+	history_position = 0;
+	history.push(getState());
+
+	// display the resulting state
+	draw();
+}
+
+// add a CSS class based on a query selector
+function addClass(selector, cls)
+{
+	let list = document.documentElement.querySelectorAll(selector);
+	for (let e of list) e.classList.add(cls);
+}
+
+// remove a CSS class based on a query selector
+function delClass(selector, cls)
+{
+	let list = document.documentElement.querySelectorAll(selector);
+	for (let e of list) e.classList.remove(cls);
+}
+
+// display the current board state
+function draw()
+{
+	let correct = 0;
+	for (let i=0; i<9; i++)
+	{
+		for (let j=0; j<9; j++)
+		{
+			let f = field[9*i+j];
+			f.box.classList.remove("number");
+			f.box.classList.remove("active");
+			f.box.classList.remove("highlight");
+			f.box.classList.remove("mistake");
+			if (f.given)
+			{
+				f.box.classList.add("number");
+				f.number_box.style.display = "flex";
+				f.candidates_box.style.display = "none";
+				f.number_box.innerText = f.correct;
+				f.number_box.classList.add("given");
+				if (f.value == highlight_value) f.box.classList.add("highlight");
+			}
+			else if (f.value < 512)
+			{
+				f.box.classList.add("number");
+				f.number_box.style.display = "flex";
+				f.candidates_box.style.display = "none";
+				f.number_box.innerText = f.value;
+				f.number_box.classList.remove("given");
+				if (f.value != f.correct && ! enter_mode && show_mistakes) f.box.classList.add("mistake");
+				if (f.value == highlight_value) f.box.classList.add("highlight");
+			}
+			else
+			{
+				f.number_box.style.display = "none";
+				f.candidates_box.style.display = enter_mode ? "none" : "flex";
+				for (let k=0; k<9; k++)
+				{
+					f.candidate_box[k].innerText = (f.value & (1 << k)) ? k+1 : "";
+				}
+				if (highlight_candidate !== null && (f.value & (1 << (highlight_candidate-1))))
+				{
+					f.box.classList.add("highlight");
+				}
+			}
+			if (active === 9*i+j) f.box.classList.add("active");
+			if (f.value < 512 && f.value == f.correct) correct++;
+		}
+	}
+
+	// completeness check
+	if (correct == 81)
+		main1.classList.add("complete");
+	else
+		main1.classList.remove("complete");
+
+	// activate / deactivate buttons
+	if (history_position == 0)
+		addClass("#undo-button", "deactivated");
+	else
+		delClass("#undo-button", "deactivated");
+
+	if (history_position == history.length - 1)
+		addClass("#redo-button", "deactivated");
+	else
+		delClass("#redo-button", "deactivated");
+
+	if (enter_mode)
+		delClass("#check-button", "deactivated");
+	else
+		addClass("#check-button", "deactivated");
+
+	if (enter_mode)
+	{
+		addClass("#bar1 .button", "deactivated");
+		addClass("#bar2 .button", "deactivated");
+		delClass("#bar3 .button", "deactivated");
+		addClass("#bar4 .button", "deactivated");
+	}
+	else
+	{
+		delClass("#bar1 .button", "deactivated");
+		delClass("#bar2 .button", "deactivated");
+		if (active === null || field[active].value < 512)
+		{
+			addClass("#bar3 .button", "deactivated");
+			addClass("#bar4 .button", "deactivated");
+		}
+		else
+		{
+			delClass("#bar3 .button", "deactivated");
+			delClass("#bar4 .button", "deactivated");
+		}
+	}
+
+	if (show_mistakes)
+		document.getElementById("show-mistakes-button").classList.add("active");
+	else
+		document.getElementById("show-mistakes-button").classList.remove("active");
+}
+
+// build the page and register event handlers
+window.addEventListener("load", function(event)
+{
+	// create the board
+	let main1 = createElement({type: "div", id: "main1", parent: document.body});
+
+	let bar0 = createElement({type: "div", classname: "big-bar", parent: main1});
+	{
+		let menuButton = createElement({
+				type: "div",
+				id: "menu-button",
+				classname: "big-button",
+				parent: bar0,
+				html: "&#x2630;",
+				help: "menu",
+				click: function(event)
+				{
+					document.getElementById("cover").style.display = "flex";
+				},
+			});
+		let undoButton = createElement({
+				type: "div",
+				id: "undo-button",
+				classname: "big-button",
+				parent: bar0,
+				html: "&#x27F2;",
+				help: "undo",
+				click: function(event)
+				{
+					// undo an action
+					if (history_position > 0)
+					{
+						history_position--;
+						setState(history[history_position]);
+						draw();
+					}
+				},
+			});
+		let redoButton = createElement({
+				type: "div",
+				id: "redo-button",
+				classname: "big-button",
+				parent: bar0,
+				html: "&#x27F3;",
+				help: "redo",
+				click: function(event)
+				{
+					// redo an action
+					if (history_position < history.length - 1)
+					{
+						history_position++;
+						setState(history[history_position]);
+						draw();
+					}
+				},
+			});
+		let subbar = createElement({type: "div", classname: "sub-bar", parent: bar0});
+		let helpButton = createElement({
+				type:"div",
+				id: "help-button",
+				classname: "button",
+				parent: subbar,
+				html: "?",
+				help: "help",
+				click: function(event)
+				{
+					// toggle button names, i.e., swap names and help texts
+					let buttons = document.documentElement.querySelectorAll(".button, .big-button");
+					for (let i=0; i<buttons.length; i++)
+					{
+						let button = buttons[i];
+						if (button.dataset.help)
+						{
+							let a = button.dataset.help;
+							let b = button.innerHTML;
+							button.innerHTML = a;
+							button.dataset.help = b;
+							button.classList.toggle("help");
+						}
+					}
+				},
+			});
+		let fullscreenButton = createElement({
+				type:"div",
+				id: "fullscreen-button",
+				classname: "button",
+				parent: subbar,
+				html: "&#x26F6;",
+				help: "fullscreen",
+				click: function(event)
+				{
+					if (document.fullscreenElement === null)
+					{
+						if (document.documentElement.requestFullscreen)
+							document.documentElement.requestFullscreen({navigationUI: "hide"});
+						else if (document.documentElement.webkitRequestFullScreen)
+							document.documentElement.webkitRequestFullScreen({navigationUI: "hide"});
+					}
+					else
+					{
+						if (document.exitFullscreen)
+							document.exitFullscreen();
+						else if (document.webkitExitFullscreen)
+							document.webkitExitFullscreen();
+					}
+				},
+			});
+		let checkButton = createElement({
+				type:"div",
+				id: "check-button",
+				classname: "button",
+				parent: subbar,
+				html: "&#x2713;",
+				help: "start own puzzle",
+				click: function(event)
+				{
+					if (! enter_mode) return;
+					let f = empty();
+					for (let i=0; i<81; i++) f[i] = field[i].value;
+					let result = solve(f);
+					if (isArray(result)) { enter_mode = false; init(f); }
+					else if (typeof result == "string") alert("Check failed: " + result);
+					else if (confirm("Failed to verify the puzzle. Play anyway?")) { enter_mode = false; init(f); }
+				},
+			});
+		let showMistakesButton = createElement({
+				type:"div",
+				id: "show-mistakes-button",
+				classname: "button active",
+				parent: subbar,
+				html: "&#x26a0;",
+				help: "show mistakes",
+				click: function(event)
+				{
+					show_mistakes = ! show_mistakes;
+					setStorage("show_mistakes", show_mistakes);
+					if (show_mistakes)
+						showMistakesButton.classList.add("active");
+					else
+						showMistakesButton.classList.remove("active");
+					draw();
+				},
+			});
+		let solveEasyButton = createElement({
+				type:"div",
+				id: "solve-easy-button",
+				classname: "button",
+				parent: subbar,
+				html: "<span>!<sup>1</sup></span>",
+				help: "solve easy puzzles",
+				click: function(event)
+				{
+					// solve with simple strategies
+					let s = getState();
+					if (solve_with_strategy(s, 1))
+					{
+						setState(s);
+
+						history.splice(history_position + 1);
+						history.push(s);
+						history_position++;
+
+						draw();
+					}
+				},
+			});
+		let solveMediumButton = createElement({
+				type:"div",
+				id: "solve-medium-button",
+				classname: "button",
+				parent: subbar,
+				html: "<span>!<sup>2</sup></span>",
+				help: "solve medium puzzles",
+				click: function(event)
+				{
+					// solve with medium strategies
+					let s = getState();
+					if (solve_with_strategy(s, 7))
+					{
+						setState(s);
+
+						history.splice(history_position + 1);
+						history.push(s);
+						history_position++;
+
+						draw();
+					}
+				},
+			});
+	}
+
+	let main2 = createElement({type: "div", id: "main2", parent: main1});
+
+	let bar1 = createElement({type: "div", id: "bar1", classname: "bar", parent: main2});
+	for (let i=0; i<9; i++)
+	{
+		let button = createElement({
+				type:"div",
+				classname: "button",
+				parent: bar1,
+				text: i+1,
+				click: (function(index) { return function(event)
+				{
+					if (enter_mode) return;
+					let b1 = bar1.querySelector(".active");
+					let b2 = bar2.querySelector(".active");
+					if (b1) b1.classList.remove("active");
+					if (b2) b2.classList.remove("active");
+
+					if (highlight_value !== index)
+					{
+						// highlighting of numbers
+						button.classList.add("active");
+						highlight_value = index;
+						highlight_candidate = null;
+					}
+					else
+					{
+						// remove highlighting
+						highlight_value = null;
+						highlight_candidate = null;
+					}
+					draw();
+				}; })(i+1),
+			});
+	}
+
+	let bar2 = createElement({type: "div", id: "bar2", classname: "bar", parent: main2});
+	for (let i=0; i<9; i++)
+	{
+		let button = createElement({
+				type:"div",
+				classname: "button",
+				parent: bar2,
+				click: (function(index) { return function(event)
+				{
+					if (enter_mode) return;
+					let b1 = bar1.querySelector(".active");
+					let b2 = bar2.querySelector(".active");
+					if (b1) b1.classList.remove("active");
+					if (b2) b2.classList.remove("active");
+
+					if (highlight_candidate !== index)
+					{
+						// highlighting of candidates
+						button.classList.add("active");
+						highlight_value = null;
+						highlight_candidate = index;
+					}
+					else
+					{
+						// remove highlighting
+						highlight_value = null;
+						highlight_candidate = null;
+					}
+					draw();
+				}; })(i+1),
+			});
+		for (let k=0; k<9; k++)
+		{
+			createElement({type: "div", classname: "candidate", text: (i == k) ? i+1 : "", parent: button});
+		}
+	}
+
+	let html_field = createElement({type: "div", id: "field", parent: main2});
+	for (let i=0; i<9; i++)
+	{
+		let group = createElement({type: "div", classname: "group", parent: html_field});
+		for (let j=0; j<9; j++)
+		{
+			let box = createElement({type: "div", classname: "box", parent: group});
+			let number_box = createElement({type: "div", classname: "number", parent: box});
+			let candidates = createElement({type: "div", classname: "candidates", parent: box});
+
+			let object = {
+					box: box,
+					number_box: number_box,
+					value: 512,
+					correct: 0,
+					given: false,
+					candidates_box: candidates,
+					candidate_box: [],
+				};
+
+			for (let k=0; k<9; k++)
+			{
+				let candidate = createElement({type: "div", parent: candidates, classname: "candidate", text: k+1});
+				object.candidate_box.push(candidate);
+			}
+			field.push(object);
+
+			box.addEventListener("click", function(event)
+			{
+				active = (active == 9*i+j) ? null : 9*i+j;
+				draw();
+			});
+		}
+	}
+
+	let bar3 = createElement({type: "div", id: "bar3", classname: "bar", parent: main2});
+	for (let i=0; i<9; i++)
+	{
+		let button = createElement({
+				type:"div",
+				classname: "button",
+				parent: bar3,
+				text: i+1,
+				click: (function(index) { return function(event)
+				{
+					// set number
+					if (active !== null)
+					{
+						if (! field[active].given && field[active].value >= 512)
+						{
+							field[active].value = index;
+							const r = related[active];
+							for (let j=0; j<r.length; j++)
+							{
+								if (field[r[j]].value >= 512) field[r[j]].value &= ~(1 << (index-1));
+							}
+
+							history.splice(history_position + 1);
+							history.push(getState());
+							history_position++;
+
+							draw();
+						}
+					}
+				}; })(i+1),
+			});
+	}
+
+	let bar4 = createElement({type: "div", id: "bar4", classname: "bar", parent: main2});
+	for (let i=0; i<9; i++)
+	{
+		let button = createElement({
+				type:"div",
+				classname: "button",
+				parent: bar4,
+				click: (function(index) { return function(event)
+				{
+					// remove candidate
+					if (enter_mode) return;
+					if (active !== null)
+					{
+						if (! field[active].given && field[active].value >= 512 && field[active].value & (1 << index))
+						{
+							field[active].value &= ~(1 << index);
+
+							history.splice(history_position + 1);
+							history.push(getState());
+							history_position++;
+
+							draw();
+						}
+					}
+				}; })(i),
+			});
+		for (let k=0; k<9; k++)
+		{
+			createElement({type: "div", classname: "candidate", text: (i == k) ? i+1 : "", parent: button});
+		}
+	}
+
+	draw();
+
+	// create the license information element
+	let dom_license = createElement({type: "div", id: "legal", parent: main2});
+	createElement({type: "div", id: "legal-content", parent: dom_license, html: license,
+			click: function(event)
+			{
+				dom_license.style.display = "none";
+			},
+		});
+
+	// create the menu
+	let cover = createElement({type: "div", id: "cover", parent: main2});
+	let menu = createElement({type: "div", id: "menu", parent: cover});
+	let button_back = createElement({
+			type: "div",
+			id: "button-back-to-game",
+			classname: "menu-button deactivated",
+			parent: menu,
+			text: "Back to game",
+			click: function(event)
+			{
+				if (initialized) cover.style.display = "none";
+			},
+		});
+	let button_easy = createElement({
+			type: "div",
+			classname: "menu-button",
+			parent: menu,
+			text: "Easy",
+			click: function(event)
+			{
+				enter_mode = false;
+				active = null;
+				delClass(".active", "active");
+				highlight_value = null;
+				highlight_candidate = null;
+				create("easy", function(f)
+				{
+					init(f);
+					cover.style.display = "none";
+				});
+			},
+		});
+	let button_medium = createElement({
+			type: "div",
+			classname: "menu-button",
+			parent: menu,
+			text: "Medium",
+			click: function(event)
+			{
+				enter_mode = false;
+				active = null;
+				delClass(".active", "active");
+				highlight_value = null;
+				highlight_candidate = null;
+				create("medium", function(f)
+				{
+					init(f);
+					cover.style.display = "none";
+				});
+			},
+		});
+	let button_hard = createElement({
+			type: "div",
+			classname: "menu-button",
+			parent: menu,
+			text: "Hard",
+			click: function(event)
+			{
+				enter_mode = false;
+				active = null;
+				delClass(".active", "active");
+				highlight_value = null;
+				highlight_candidate = null;
+				create("hard", function(f)
+				{
+					init(f);
+					cover.style.display = "none";
+				});
+			},
+		});
+	let button_very_hard = createElement({
+			type: "div",
+			classname: "menu-button",
+			parent: menu,
+			text: "Very hard",
+			click: function(event)
+			{
+				enter_mode = false;
+				active = null;
+				delClass(".active", "active");
+				highlight_value = null;
+				highlight_candidate = null;
+				create("very hard", function(f)
+				{
+					init(f);
+					cover.style.display = "none";
+				});
+			},
+		});
+	let button_manual = createElement({
+			type: "div",
+			classname: "menu-button",
+			parent: menu,
+			text: "Create your own puzzle",
+			click: function(event)
+			{
+				enter_mode = true;
+				active = null;
+				delClass(".active", "active");
+				highlight_value = null;
+				highlight_candidate = null;
+				init(empty());
+				cover.style.display = "none";
+				draw();
+			},
+		});
+	let button_legal = createElement({
+			type: "div",
+			classname: "menu-legal",
+			parent: cover,
+			text: "§",
+			click: function(event)
+			{
+				dom_license.style.display = "flex";
+			},
+		});
+
+	document.body.addEventListener("keydown", function(event)
+	{
+		if (event.key >= '1' && event.key <= '9')
+		{
+			let index = parseInt(event.key);
+			if (active !== null)
+			{
+				if (! field[active].given && field[active].value >= 512)
+				{
+					field[active].value = index;
+					const r = related[active];
+					for (let j=0; j<r.length; j++)
+					{
+						if (field[r[j]].value >= 512) field[r[j]].value &= ~(1 << (index-1));
+					}
+
+					history.splice(history_position + 1);
+					history.push(getState());
+					history_position++;
+
+					draw();
+				}
+			}
+		}
+	});
+
+	let ua = navigator.userAgent.toLowerCase();
+	if (ua.indexOf('safari') != -1 && ua.indexOf('chrome') == -1)
+	{
+		// Safari mobile causes lots of problems, this cheap "fix" simply reduces the height.
+		let root = document.querySelector(':root');
+		root.style.setProperty('--totalHeight', 'calc(100vh - 50px)');
+	}
+
+}, false);
+
+</script>
+</head>
+<body>
+</body>
+</html>
