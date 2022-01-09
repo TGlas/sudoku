@@ -605,59 +605,6 @@ function set_candidates(f)
 	return f;
 }
 
-// Solve a Sudoku puzzle, given as an array of length 81. The function
-// returns the completed array if it is unique, and otherwise
-//    "the puzzle is unsolvable"
-// or
-//    "the puzzle does not have a unique solution".
-// The function returns null if the number of iterations exceeds the
-// given maximum.
-function solve(field, maxiter = 100000)
-{
-	field = clear_candidates(field);
-	let iter = 0;
-
-	// recursive backtracking solver
-	function rec(k)
-	{
-		while (k < 81 && field[k] > 0) k++;
-		if (k == 81) return field.slice();
-
-		if (iter >= maxiter) return null;
-		iter++;
-
-		let ret = "the puzzle is unsolvable";
-		const r = related[k];
-		for (let c=1; c<=9; c++)
-		{
-			let legal = true;
-			for (let i=0; i<r.length; i++)
-			{
-				if (field[r[i]] == c)
-				{
-					legal = false;
-					break;
-				}
-			}
-			if (legal)
-			{
-				field[k] = c;
-				let result = rec(k+1);
-				field[k] = 0;
-				if (isArray(result))
-				{
-					if (ret === "the puzzle is unsolvable") ret = result;
-					else return "the puzzle does not have a unique solution";
-				}
-				else if (result === "the puzzle does not have a unique solution") return result;
-			}
-		}
-		return ret;
-	}
-
-	return rec(0);
-}
-
 // Solve -- or partially solve -- the field using a restricted strategy.
 // The function modifies the field in-place, including updated
 // candidates. It returns true if at least one modification was made.
@@ -892,6 +839,66 @@ function solve_with_strategy(field, strategies = 0xffffffff)
 	return modified;
 }
 
+// Solve a Sudoku puzzle, given as an array of length 81. The function
+// returns the completed array if it is unique, and otherwise
+//    "the puzzle is unsolvable"
+// or
+//    "the puzzle does not have a unique solution".
+// The function returns null if the number of iterations exceeds the
+// given maximum.
+function solve(field, maxiter = 10000)
+{
+	field = set_candidates(field);
+	let iter = 0;
+
+	// recursive backtracking solver
+	function rec(field, k)
+	{
+		solve_with_strategy(field, 3);
+
+		while (k < 81 && field[k] < 512) k++;
+		if (k == 81) return field.slice();
+
+		if (iter >= maxiter) return null;
+		iter++;
+
+		let ret = "the puzzle is unsolvable";
+		const r = related[k];
+		for (let c=1; c<=9; c++)
+		{
+			let legal = true;
+			for (let i=0; i<r.length; i++)
+			{
+				if (field[r[i]] == c)
+				{
+					legal = false;
+					break;
+				}
+			}
+			if (legal)
+			{
+				let newfield = field.slice();
+				newfield[k] = c;
+				const r = related[k];
+				for (let i=0; i<r.length; i++)
+				{
+					if (newfield[r[i]] >= 512) newfield[r[i]] &= ~(1 << (c-1));
+				}
+				let result = rec(newfield, k+1);
+				if (isArray(result))
+				{
+					if (ret === "the puzzle is unsolvable") ret = result;
+					else return "the puzzle does not have a unique solution";
+				}
+				else if (result === "the puzzle does not have a unique solution") return result;
+			}
+		}
+		return ret;
+	}
+
+	return rec(field, 0);
+}
+
 // create an empty puzzle
 function empty()
 {
@@ -1020,7 +1027,7 @@ function create(difficulty, onDone)
 
 			// check with the solver
 			let add = false;
-			let result = solve(f, 10000);
+			let result = solve(f);
 			if (result === null)
 			{
 				// undo
@@ -1048,7 +1055,7 @@ function create(difficulty, onDone)
 						{
 							f[pos] = complete[pos];
 							givens++;
-							if (isArray(solve(f, 10000))) break;
+							if (isArray(solve(f))) break;
 						}
 					}
 				}
