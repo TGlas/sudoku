@@ -215,6 +215,19 @@ sup {
 	font-size: calc(min(100vw, var(--totalHeight)) * 0.036);
 	text-align: center;
 }
+.menu-error-console {
+	display: block;
+	position: fixed;
+	right: calc(min(100vw, var(--totalHeight)) * 0.01);
+	top: calc(min(100vw, var(--totalHeight)) * 0.08);
+	width: calc(min(100vw, var(--totalHeight)) * 0.05);
+	height: calc(min(100vw, var(--totalHeight)) * 0.05);
+	border-radius: calc(min(100vw, 1.5 * (var(--totalHeight))) * 0.01);
+	border: 2px solid #ccc;
+	background: #fff;
+	font-size: calc(min(100vw, var(--totalHeight)) * 0.036);
+	text-align: center;
+}
 
 #legal {
 	position: fixed;
@@ -240,6 +253,30 @@ sup {
 	font-size: calc(min(100vw, var(--totalHeight)) * 0.022);
 	overflow-y: auto;
 }
+
+#error-console {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: calc(var(--totalHeight));
+	background: #fff;
+	color: #000;
+	display: none;
+	flex-flow: column;
+	justify-content: start;
+	align-items: start;
+	z-index: 110;
+	overflow-y: auto;
+	font-size: calc(min(100vw, var(--totalHeight)) * 0.03);
+}
+
+#error-console div {
+	padding: calc(min(100vw, var(--totalHeight)) * 0.01);
+	font-family: monospace;
+	background: #eee;
+}
+
 
 .wait {
 	position: fixed;
@@ -1755,6 +1792,14 @@ window.addEventListener("load", function(event)
 			},
 		});
 
+	let dom_error_console = createElement({type: "div", id: "error-console", parent: main2,
+			html: "<div>Error Console (click to close)</div>",
+			click: function(event)
+			{
+				dom_error_console.style.display = "none";
+			},
+		});
+
 	// create the menu
 	let cover = createElement({type: "div", id: "cover", parent: main2});
 	let menu = createElement({type: "div", id: "menu", parent: cover});
@@ -1872,6 +1917,16 @@ window.addEventListener("load", function(event)
 				dom_license.style.display = "flex";
 			},
 		});
+	let button_error_console = createElement({
+			type: "div",
+			classname: "menu-error-console",
+			parent: cover,
+			html: "&#128030;",
+			click: function(event)
+			{
+				dom_error_console.style.display = "flex";
+			},
+		});
 
 	document.body.addEventListener("keydown", function(event)
 	{
@@ -1908,6 +1963,21 @@ window.addEventListener("load", function(event)
 	}
 
 }, false);
+
+window.onerror = function(msg, url, line, col, error)
+{
+	let txt = "line " + line + ": " + msg;
+	console.log(txt);
+	createElement({
+		type: "div",
+		parent: document.getElementById("error-console"),
+		text: txt,
+	});
+	main1.style.background = "#f00";
+	window.setTimeout(() => { main1.style.background = "#99b"; }, 1000);
+
+	return true;
+};
 
 </script>
 </head>
