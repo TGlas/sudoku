@@ -31,7 +31,7 @@ sup {
 .button {
 	width: calc(var(--unit) * 0.9);
 	height: calc(var(--unit) * 0.9);
-	margin: calc(var(--unit) * 0.05);
+	margin: calc(var(--unit) * 0.04);
 	background: #ddd;
 	border: 2px solid #eee;
 	border-radius: 4px;
@@ -542,7 +542,7 @@ sup {
 "use strict"
 
 const license = `<p>
-Copyright &copy; 2022 Tobias Glasmachers
+Copyright &copy; 2022-2023 Tobias Glasmachers
 </p><p>
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 </p><p>
@@ -1504,7 +1504,15 @@ window.addEventListener("load", function(event)
 				id: "fullscreen-button",
 				classname: "button",
 				parent: subbar,
-				html: "&#x26F6;",
+//				html: "&#x26F6;",
+				html: `
+				<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+				<path d="M10,40 V20 A10,10,0,0,1,20,10 H40" fill="transparent" stroke="black" stroke-width="6"/>
+				<path d="M60,10 H80 A10,10,0,0,1,90,20 V40" fill="transparent" stroke="black" stroke-width="6"/>
+				<path d="M90,60 V80 A10,10,0,0,1,80,90 H60" fill="transparent" stroke="black" stroke-width="6"/>
+				<path d="M40,90 H20 A10,10,0,0,1,10,80 V60" fill="transparent" stroke="black" stroke-width="6"/>
+				</svg>
+				`,
 				help: "fullscreen",
 				click: function(event)
 				{
